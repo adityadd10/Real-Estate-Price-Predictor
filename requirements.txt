@@ -1,0 +1,5 @@
+# Convenience install for local development: everything needed to train,
+# serve the API, run the Streamlit UI, and run the test suite.
+# In Docker, the api and streamlit images install only requirements/api.txt
+# and requirements/streamlit.txt respectively, to keep images lean.
+-r requirements/dev.txt

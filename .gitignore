@@ -1,0 +1,25 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Trained model artifacts (reproducible via `make train`; not committed)
+artifacts/pipeline.pkl
+artifacts/model_metadata.json
+mlruns/
+mlartifacts/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store

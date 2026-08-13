@@ -36,7 +36,9 @@ def _ensure_trained() -> None:
     logger.warning("No trained model artifact found at %s — training now.", pipeline_path)
     from src.models.train import main as train_main
 
-    train_main()
+    # argv=[] -- without this, argparse reads sys.argv from the *running
+    # process* (e.g. uvicorn's own CLI args) and crashes. See train.main().
+    train_main(argv=[])
 
 
 def get_model():

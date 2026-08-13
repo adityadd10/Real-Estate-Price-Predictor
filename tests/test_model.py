@@ -97,6 +97,27 @@ def test_predict_price_end_to_end(monkeypatch, isolated_artifact_dir):
     assert response.model_version.startswith("xgboost@")
 
 
+def test_self_training_ignores_host_process_argv(monkeypatch, isolated_artifact_dir):
+    """Regression test: src.models.predict._ensure_trained() calls train.main()
+    from *inside a running server process* to self-train when no artifact
+    exists yet. If that call let argparse read the real sys.argv, it would try
+    to parse whatever the host process was actually launched with (e.g.
+    uvicorn's own "api.main:app --host 0.0.0.0 --port 8000") and crash the
+    entire app at startup -- which is exactly what happened the first time
+    this was tested against a genuinely empty Docker volume instead of a
+    pre-populated artifact dir. Simulate that real invocation here."""
+    import sys as _sys
+
+    from src.models import predict
+
+    monkeypatch.setattr(_sys, "argv", ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"])
+
+    pipeline, metadata = predict.get_model()
+
+    assert metadata["model_type"] == "xgboost"
+    assert pipeline is not None
+
+
 def test_predict_price_unseen_category_does_not_crash(monkeypatch, isolated_artifact_dir):
     """A sector/agePossession value the model never saw during training should
     be handled gracefully (OrdinalEncoder handle_unknown='use_encoded_value'),

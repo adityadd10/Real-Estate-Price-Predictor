@@ -204,11 +204,16 @@ def log_run_to_snowflake(metrics: dict, model_type: str, sha: str | None) -> Non
         logger.exception("Failed to write MODEL_RUNS row to Snowflake (non-fatal)")
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    """argv defaults to None, which makes argparse read sys.argv[1:] -- correct
+    when this runs as a script. src.models.predict calls this programmatically
+    from inside a running uvicorn process to self-train on first boot, and
+    must pass argv=[] there instead, or argparse would try to parse uvicorn's
+    own CLI arguments and crash the whole app at startup."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", choices=["snowflake", "csv"], default="snowflake" if settings.snowflake_configured else "csv")
     parser.add_argument("--compare", action="store_true", help="Run the full model bake-off before training the final model")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     df = load_training_data(args.source)
     X = df.drop(columns=["price"])

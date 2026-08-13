@@ -4,12 +4,19 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# build-essential is needed at build time only: wordcloud ships no prebuilt
+# wheel for every platform (e.g. linux/arm64) and compiles a small C
+# extension from source on install, which needs a compiler *and* libc
+# headers (gcc alone isn't enough -- python:3.11-slim has neither).
+# Removed again after pip install so it doesn't bloat the final image.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6 \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements/base.txt requirements/streamlit.txt requirements/
-RUN pip install --no-cache-dir -r requirements/streamlit.txt
+RUN pip install --no-cache-dir -r requirements/streamlit.txt \
+    && apt-get purge -y --auto-remove build-essential
 
 COPY streamlit_app/ streamlit_app/
 

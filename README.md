@@ -147,8 +147,9 @@ lineage — "which model version is in production, trained from which data, when
 `.github/workflows/ci-cd.yml`:
 1. **Every push/PR** — `ruff check` + `pytest` (offline, fixture-based).
 2. **On push to `main`**, after tests pass — builds both Docker images and pushes
-   them to GitHub Container Registry (`ghcr.io/<you>/<repo>/api` and `.../streamlit`),
-   tagged with both `latest` and the commit SHA.
+   them to GitHub Container Registry (`ghcr.io/<you>/<repo>/api` and `.../streamlit`,
+   lowercased — GHCR rejects uppercase repository paths), tagged with both
+   `latest` and the commit SHA.
 3. **Deploy** — [Render](https://render.com) is connected directly to this GitHub repo
    and rebuilds/redeploys both services on every push to `main` once checks pass (see
    below). GHCR publishing is kept as its own step regardless, so there's a versioned,

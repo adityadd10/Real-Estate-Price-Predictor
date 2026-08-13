@@ -20,6 +20,7 @@ mlartifacts/
 # IDE
 .idea/
 .vscode/
+.claude/settings.local.json
 
 # OS
 .DS_Store

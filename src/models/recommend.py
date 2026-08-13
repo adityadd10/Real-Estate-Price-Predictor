@@ -82,9 +82,12 @@ def nearby_properties(landmark: str, radius_km: float) -> list[NearbyItem]:
         try:
             from src.data.snowflake_client import query
 
+            # Columns were written with lowercase names quoted (see write_table),
+            # so they must be quoted here too -- unquoted identifiers fold to
+            # UPPERCASE in Snowflake and wouldn't match.
             result = query(
-                "SELECT property, distance_m FROM LOCATION_DISTANCE "
-                "WHERE landmark = %s AND distance_m < %s ORDER BY distance_m",
+                'SELECT "property", "distance_m" FROM "LOCATION_DISTANCE" '
+                'WHERE "landmark" = %s AND "distance_m" < %s ORDER BY "distance_m"',
                 (landmark, radius_m),
             )
             return [

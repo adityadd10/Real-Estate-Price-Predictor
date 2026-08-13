@@ -44,13 +44,16 @@ def get_connection() -> Iterator[snowflake.connector.SnowflakeConnection]:
 
 def read_table(table_name: str) -> pd.DataFrame:
     """Read an entire table into a DataFrame. Fine for this project's data sizes
-    (a few thousand rows) — for anything larger you'd push filters into SQL instead."""
+    (a few thousand rows) — for anything larger you'd push filters into SQL instead.
+
+    Column names round-trip exactly as written (see write_table) — no case
+    normalization here, since this project's feature names are case-sensitive
+    (e.g. "bedRoom", "agePossession") and write_pandas quotes identifiers to
+    preserve exactly that casing."""
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(f"SELECT * FROM {table_name}")
-            df = cur.fetch_pandas_all()
-    df.columns = [c.lower() for c in df.columns]
-    return df
+            cur.execute(f'SELECT * FROM "{table_name.upper()}"')
+            return cur.fetch_pandas_all()
 
 
 def query(sql: str, params: tuple | None = None) -> pd.DataFrame:
@@ -60,19 +63,17 @@ def query(sql: str, params: tuple | None = None) -> pd.DataFrame:
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(sql, params)
-            df = cur.fetch_pandas_all()
-    df.columns = [c.lower() for c in df.columns]
-    return df
+            return cur.fetch_pandas_all()
 
 
 def write_table(df: pd.DataFrame, table_name: str, overwrite: bool = True) -> None:
-    """Write a DataFrame to Snowflake, creating the table if needed."""
-    upload_df = df.copy()
-    upload_df.columns = [c.upper() for c in upload_df.columns]
+    """Write a DataFrame to Snowflake, creating the table if needed. Column names
+    are written exactly as given (write_pandas quotes identifiers), so casing
+    like "bedRoom" or spaces like "servant room" survive the round trip."""
     with get_connection() as conn:
         write_pandas(
             conn,
-            upload_df,
+            df,
             table_name.upper(),
             auto_create_table=True,
             overwrite=overwrite,

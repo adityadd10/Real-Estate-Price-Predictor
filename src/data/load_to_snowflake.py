@@ -82,9 +82,13 @@ def load_location_distance() -> None:
     with open(path, "rb") as f:
         wide_df = pickle.load(f)
 
+    # reset_index() names the new column after the index's own name (e.g.
+    # "PropertyName") when it has one, and "index" only when it doesn't --
+    # handle both rather than assuming the unnamed case.
+    index_col = wide_df.index.name or "index"
     long_df = (
         wide_df.reset_index()
-        .rename(columns={"index": "property"})
+        .rename(columns={index_col: "property"})
         .melt(id_vars="property", var_name="landmark", value_name="distance_m")
         .dropna(subset=["distance_m"])
     )
